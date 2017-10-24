@@ -38,7 +38,7 @@ public class GogsPayloadProcessor {
   public GogsPayloadProcessor() {
   }
 
-  public GogsResults triggerJobs(String jobName, String deliveryID) {
+  public GogsResults triggerJobs(String jobName, String deliveryID, String payload) {
     SecurityContext saveCtx = null;
     GogsResults result = new GogsResults();
 
@@ -53,7 +53,8 @@ public class GogsPayloadProcessor {
         BuildableItem project = GogsUtils.find(jobName, BuildableItem.class);
         if (project != null) {
           Cause cause = new GogsCause(deliveryID);
-          project.scheduleBuild(0, cause);
+          GogsPayload gogsPayload = new GogsPayload(payload);
+          project.scheduleBuild2(0, cause, gogsPayload);
           result.setMessage(String.format("Job '%s' is executed",jobName));
         } else {
           String msg = String.format("Job '%s' is not defined in Jenkins",jobName);
