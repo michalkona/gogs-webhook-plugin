@@ -36,6 +36,16 @@ import org.apache.commons.io.IOUtils;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
+import hudson.slaves.EnvironmentVariablesNodeProperty.Entry;
+import hudson.slaves.NodeProperty;
+import hudson.slaves.NodePropertyDescriptor;
+import hudson.slaves.EnvironmentVariablesNodeProperty;
+import hudson.model.Node;
+import hudson.model.ParametersDefinitionProperty;
+import hudson.EnvVars;
+import hudson.util.DescribableList;
+import java.util.Collections;
+
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
@@ -142,14 +152,15 @@ public class GogsWebHook implements UnprotectedRootAction {
         try {
             Jenkins jenkins = Jenkins.getActiveInstance();
             ACL acl = jenkins.getACL();
+            jenkins.getGlobalNodeProperties().replaceBy(
+                Collections.singleton(new EnvironmentVariablesNodeProperty(
+                        new Entry("GOGS_PAYLOAD", body))));
             acl.impersonate(ACL.SYSTEM);
 
             Job job = GogsUtils.find(jobName, Job.class);
-
             if (job != null) {
                 foundJob = true;
-                GogsPayload gogsPayload = new GogsPayload(body);
-                job.addAction(gogsPayload)
+
 				/* secret is stored in the properties of Job */
 				final GogsProjectProperty property = (GogsProjectProperty) job.getProperty(GogsProjectProperty.class);
 				if (property != null) { /* only if Gogs secret is defined on the job */
